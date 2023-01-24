@@ -6,7 +6,7 @@ typedef struct defstack defstack;
 defstack *init_stack(void);
 void push(defstack *stack, stackitem *item);
 int pop(defstack *stack);
-stackitem *create_item(int value);
+stackitem *create_item(defstack *stack, int value);
 
 struct defstack
 {
@@ -24,9 +24,11 @@ struct stackitem
 int main(void)
 {
     defstack *stack = init_stack();
+
+    printf("Value is = %d\n", stack->top->value);
     for (int i = 1; i < 10; i++)
     {   
-        stackitem *newvalue = create_item(i);
+        stackitem *newvalue = create_item(stack, i);
         push(stack, newvalue);
         printf("Value is = %d\n", stack->top->value);
     }
@@ -35,10 +37,10 @@ int main(void)
     {
         printf("Value is = %d\n", pop(stack));
     }
-    printf("items on stack = %d\n", stack->items_on_stack);
+    printf("items on stack = %d", stack->items_on_stack);
     for (int i = 1; i < 10; i++)
     {   
-        stackitem *newvalue = create_item(i);
+        stackitem *newvalue = create_item(stack, i);
         push(stack, newvalue);
         printf("Value is = %d\n", stack->top->value);
     }
@@ -48,9 +50,10 @@ int main(void)
     return 0;
 }
 
-stackitem *create_item(int value)
+stackitem *create_item(defstack *stack, int value)
 {
     stackitem *temp = malloc(sizeof(stackitem));
+    temp->prev = stack->top;
     temp->value = value;
     return temp;
 }
@@ -58,32 +61,26 @@ stackitem *create_item(int value)
 int pop(defstack *stack)
 {   
     stackitem old_top = *stack->top;
-    free(stack->top);
+    free(stack->top);//why the fuck does it ripple and corrupt  all the adresses and values in the underlying items?
     stack->top = old_top.prev; 
     stack->items_on_stack--;
     return old_top.value;
 }
 
 void push(defstack *stack, stackitem *item)
-{   
-    if (stack->items_on_stack == 0)
-    {
-        stack->top = item;
-        stack->top->prev = NULL;
-        stack->bottom = stack->top;
-        stack->items_on_stack++;
-    }
-    else
-    {
-        item->prev = stack->top;
-        stack->top = item;
-        stack->items_on_stack++;
-    }
+{
+    item->prev = stack->top;
+    stack->top = item;
+    stack->items_on_stack++;
 }
 
 defstack *init_stack(void)
 {
     defstack *stack = malloc(sizeof(defstack));
-    stack->items_on_stack = 0;
+    stack->top = malloc(sizeof(stackitem));
+    stack->top->value = 0;
+    stack->top->prev = NULL;
+    stack->bottom = stack->top;
+    stack->items_on_stack = 1;
     return stack;
 }
